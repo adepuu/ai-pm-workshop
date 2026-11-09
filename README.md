@@ -29,5 +29,10 @@ python pm_crew.py --brief brief.md
 
 Everything runs locally, with no API keys. See [`04_Code/README.md`](MurzEdu_AI_Workshop_Package/04_Code/README.md) for details.
 
+## License
+
+- **Workshop materials** (slides, outline, handouts, images): [CC BY 4.0](LICENSE). You may share and adapt them, including commercially, as long as you give credit to Felix Yustian Setiono.
+- **Code** in [`04_Code`](MurzEdu_AI_Workshop_Package/04_Code/): [MIT](MurzEdu_AI_Workshop_Package/04_Code/LICENSE).
+
 ---
 Prepared by Felix Yustian Setiono.

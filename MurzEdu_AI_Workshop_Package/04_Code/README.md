@@ -37,3 +37,5 @@ A hierarchical crew: a manager delegates to Planner / Researcher / Developer / Q
   `send_email` guardrail pattern in the slides.
 
 Prepared by Felix Yustian Setiono for the MurzEdu Program (ecommurz).
+
+This code is released under the [MIT License](LICENSE).
