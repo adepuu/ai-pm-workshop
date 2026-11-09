@@ -1,1 +1,6 @@
 .DS_Store
+
+# Python / workshop run outputs
+.venv/
+__pycache__/
+project_state.json

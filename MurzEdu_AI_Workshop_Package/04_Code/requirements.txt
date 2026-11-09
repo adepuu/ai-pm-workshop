@@ -1,0 +1,5 @@
+# Pin versions so the workshop is reproducible across laptops.
+# Check the latest on PyPI; these are known-good starting points.
+crewai==0.80.0
+crewai-tools==0.14.0
+pydantic==2.9.2
