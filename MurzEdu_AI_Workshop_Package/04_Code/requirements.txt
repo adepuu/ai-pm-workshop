@@ -1,5 +1,4 @@
-# Pin versions so the workshop is reproducible across laptops.
-# Check the latest on PyPI; these are known-good starting points.
-crewai==0.80.0
-crewai-tools==0.14.0
-pydantic==2.9.2
+# Pinned so the workshop is reproducible across laptops. Tested on Python 3.13.
+# CrewAI requires Python 3.10-3.13 (3.14 is not supported by this version).
+crewai==1.15.35
+pydantic==2.12.5

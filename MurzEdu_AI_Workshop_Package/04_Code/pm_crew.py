@@ -9,20 +9,24 @@ Run:
     pip install -r requirements.txt
     python pm_crew.py --brief brief.md
 
+Weak laptop, or a different model tag?
+    WORKSHOP_MODEL=ollama/llama3.2:3b python pm_crew.py --brief brief.md
+
 Everything runs locally through Ollama — no API keys, no data leaving the machine.
-Note: CrewAI's API evolves; pin versions (see requirements.txt) for a reproducible run.
 """
 import argparse
 import json
+import os
+import sys
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 from pydantic import BaseModel
-from crewai import Agent, Task, Crew, Process, LLM
-from crewai.tools import tool
+from crewai import Agent, Task, Crew, Process, LLM, TaskOutput
 
 # --- the local model, served by Ollama -------------------------------------
-llm = LLM(model="ollama/llama3.1", base_url="http://localhost:11434")
+MODEL = os.getenv("WORKSHOP_MODEL", "ollama/llama3.1")
+llm = LLM(model=MODEL, base_url="http://localhost:11434")
 
 
 # --- typed output: the planner returns structured data, not prose ----------
@@ -36,13 +40,12 @@ class Plan(BaseModel):
     tasks: List[TaskItem]
 
 
-# --- a tool is just a Python function the agent may choose to call ----------
-@tool("save_tasks")
-def save_tasks(tasks_json: str) -> str:
-    """Save a JSON task list to project_state.json."""
-    data = json.loads(tasks_json)
-    Path("project_state.json").write_text(json.dumps(data, indent=2))
-    return f"saved {len(data)} tasks"
+# --- a guardrail: Python validates the output; failures go back to the agent --
+def short_update(output: TaskOutput) -> tuple[bool, Any]:
+    words = len(output.raw.split())
+    if words > 120:
+        return (False, f"Too long ({words} words). Keep the update under 120 words.")
+    return (True, output.raw)
 
 
 # --- three specialists, each with one job ----------------------------------
@@ -51,7 +54,6 @@ planner = Agent(
     goal="Turn a project brief into a clear, ordered task list",
     backstory="A sharp PM who makes vague briefs actionable.",
     llm=llm,
-    tools=[save_tasks],
     verbose=True,
 )
 
@@ -66,7 +68,7 @@ risk = Agent(
 writer = Agent(
     role="Status Writer",
     goal="Draft a short, calm status update for stakeholders",
-    backstory="Writes clear, honest updates.",
+    backstory="Writes clear, honest updates and never invents facts.",
     llm=llm,
     verbose=True,
 )
@@ -86,10 +88,15 @@ def build_crew() -> Crew:
         context=[plan_task],      # pass the plan forward
     )
     status_task = Task(
-        description="Write a 5-line status update for stakeholders from the plan and risks.",
-        expected_output="A 5-line status update",
+        description=(
+            "Write a kickoff status update for stakeholders from the plan and risks. "
+            "Work has NOT started yet: do not claim any progress or completed work."
+        ),
+        expected_output="A status update of at most 5 lines and under 120 words",
         agent=writer,
         context=[plan_task, risk_task],
+        guardrail=short_update,
+        guardrail_max_retries=2,
     )
     return Crew(
         agents=[planner, risk, writer],
@@ -104,9 +111,24 @@ if __name__ == "__main__":
     ap.add_argument("--brief", default="brief.md", help="path to a project brief")
     args = ap.parse_args()
 
-    brief = Path(args.brief).read_text()
+    brief = Path(args.brief).read_text(encoding="utf-8")
     result = build_crew().kickoff(inputs={"brief": brief})
 
+    # Shared state is written by Python from the validated Plan, so it can't be
+    # skipped by the model. Saving is too important to leave to the model's choice.
+    plan_out, risk_out, status_out = result.tasks_output
+    if plan_out.pydantic is None:
+        sys.exit("The planner did not return a valid Plan; project_state.json was not written.")
+
+    state = {
+        "tasks": [t.model_dump() for t in plan_out.pydantic.tasks],
+        "risks": risk_out.raw,
+        "status_update": status_out.raw,
+    }
+    Path("project_state.json").write_text(json.dumps(state, indent=2), encoding="utf-8")
+
     print("\n=== RESULT ===\n")
-    print(result)
-    print("\n(tasks also written to project_state.json)")
+    print(f"{len(state['tasks'])} tasks planned\n")
+    print(state["risks"], "\n")
+    print(state["status_update"])
+    print("\n(saved to project_state.json)")
