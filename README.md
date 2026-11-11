@@ -9,13 +9,14 @@ All materials are in [`MurzEdu_AI_Workshop_Package/`](MurzEdu_AI_Workshop_Packag
 
 | Folder | What's inside |
 |---|---|
-| [Pre-workshop setup](MurzEdu_AI_Workshop_Package/) | `Pre_Workshop_Setup`: install steps to finish before the session |
+| [Pre-workshop setup](MurzEdu_AI_Workshop_Package/03_Audience_Handouts/) | `Pre_Workshop_Setup`: install steps to finish before the session |
 | [`00_Outline`](MurzEdu_AI_Workshop_Package/00_Outline/) | Workshop outline and agenda |
 | [`01_Slide_Deck`](MurzEdu_AI_Workshop_Package/01_Slide_Deck/) | Main slide deck (.pptx and .pdf) |
 | [`02_Presenter_Handout`](MurzEdu_AI_Workshop_Package/02_Presenter_Handout/) | Presenter guide |
 | [`03_Audience_Handouts`](MurzEdu_AI_Workshop_Package/03_Audience_Handouts/) | Build guide and worksheet for participants |
 | [`04_Code`](MurzEdu_AI_Workshop_Package/04_Code/) | Hands-on code: a local CrewAI + Ollama PM assistant |
 | [`05_Extras`](MurzEdu_AI_Workshop_Package/05_Extras/) | Virtual backgrounds and QR code |
+| [`06_Fallback_Runs`](MurzEdu_AI_Workshop_Package/06_Fallback_Runs/) | Real output from `llama3.1:8b`, in case a live run stalls |
 
 ## Quick start (code)
 
@@ -24,6 +25,7 @@ ollama pull llama3.1
 cd MurzEdu_AI_Workshop_Package/04_Code
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+python check_setup.py            # should print: ALL GOOD
 python pm_crew.py --brief brief.md
 ```
 
